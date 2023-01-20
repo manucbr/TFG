@@ -1,0 +1,5 @@
+{
+    "n_estimators": 200,
+    "criterion": "mse",
+    "random_state": 0
+}
