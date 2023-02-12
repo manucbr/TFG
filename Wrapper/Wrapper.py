@@ -10,9 +10,6 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
 from scipy.stats import binned_statistic
 
-
-
-
 class OrdinalWrapper(BaseEstimator,ClassifierMixin):
 
     """
@@ -41,52 +38,15 @@ class OrdinalWrapper(BaseEstimator,ClassifierMixin):
 
     """
 
-    def __init__(self, base_classifier, scaler, labels=None , params=None):
+    def __init__(self, base_classifier, scaler = None,labels=None , params=None):
         self.base_classifer = base_classifier
         self.labels = labels
         self.params = params
-        self.scaler = scaler
-        self.scaler_ = None
+        self.scaler = scaler 
+        self.labels_ = None
+        self.scaledY_ = None
         self.classifier_ = None
-    def fitPredict(self, dataTrain, dataTest):
 
-        """
-		Wrap fit and predict, makes the data usable for the methods, print metrics and result
-
-		Parameters
-		----------
-
-		dataTrain: {pandas DataFrame}, shape (n_samples, n_features)
-			Training patterns array, where n_samples is the number of
-			samples and n_features is the number of features.
-
-		dataTest: {pandas DataFrame}, shape (n_samples, n_features)
-			Training patterns array, where n_samples is the number of
-			samples and n_features is the number of features.
-
-		Returns
-		-------
-
-		self: object
-        """
-        X_train = dataTrain.iloc[:, :-1].values
-        y_train = dataTrain.iloc[:, -1].values
-        X_test = dataTest.iloc[:, :-1].values
-        y_test = dataTest.iloc[:, -1].values
-        
-        #discretizer = self.normalizeDataIntoCustomRange(y_train)
-        #y_train = discretizer.transform(y_train.reshape(-1,1))
-        self.clf.fit(X_train, y_train.ravel())
-      #  y_testDiscretized = discretizer.transform(y_test.reshape(-1,1))
-        prediction = self.clf.predict(X_test)
-        prediction = prediction.round(decimals=0)
-        prediction = np.absolute(prediction)
-        score = accuracy_score(y_test,prediction)
-        print(score)
-       # print(self.showPredicitionLabelized(prediction))
-
-        return self
-  
     def fit(self, X, y):
 
         """
@@ -112,8 +72,9 @@ class OrdinalWrapper(BaseEstimator,ClassifierMixin):
         if(None != self.params):
             estimator = load_classifier(self.base_classifer, self.params)
         y = y.reshape(-1,1)
-        self.scaler_ = self.scaleData(y)
-        self.y_ = self.scaler_.transform(y) 
+        y  = self.maskYValues(y)
+        self.scaledY_ = self.scaleData(y)
+        self.y_ = self.scaledY_.transform(y.reshape(-1,1)) 
         estimator.fit(self.X_ ,self.y_.ravel())
         self.classifier_ = (estimator)
         return self
@@ -139,65 +100,65 @@ class OrdinalWrapper(BaseEstimator,ClassifierMixin):
 
         X = check_array(X)
         predicted_y = self.classifier_.predict(X)
-        predicted_y = self.scaler_.inverse_transform(predicted_y.reshape(-1,1))
-        predicted_y = predicted_y.round(decimals=0)
+        predicted_y = self.scaledY_.inverse_transform(predicted_y.reshape(-1,1))
+        predicted_y = self.roundToNearestClass(predicted_y)
         predicted_y = np.absolute(predicted_y)
         return predicted_y
 # Private methods
 
-    def  normalizeDataIntoCustomRange(self,y):
-
         """
-		Train the sklearn preprocessing model to transform the values of independent 
-        variable from continous data to known nominal classes
+		Transform the y array with the labels given by the user
 
 		Parameters
 		----------
 
-		y: array-like, shape (n_samples)
+		Y : array-like, shape (n_samples)
 			Target vector relative to X
 
 		Returns
 		-------
 
-		discretizer : sklearn model
+		NewLabels : array-like, shape (n_targets)
 			
 		"""
 
-        if (self.labels is None):
-            self.labels = np.array(["malo","regular","bueno","excelente"])
-            discretizer = sklearn.preprocessing.KBinsDiscretizer(self.labels.size, encode='ordinal', strategy='uniform', dtype= np.float64)
-            discretizer.fit(y.reshape(-1,1))
-        else: 
-            discretizer = sklearn.preprocessing.KBinsDiscretizer(self.labels.size, encode='ordinal', strategy='uniform', dtype= np.float64)
-            discretizer.fit(y.reshape(-1,1))
-        return discretizer
-
-    def showPredicitionLabelized(self,prediction):
+    def maskYValues(self,y):
+        if(self.labels is None):
+            self.labels_ = np.unique(y)
+            return y
+        self.labels_ = self.labels
+        originalLabels = np.unique(y)
+        newLabels = np.zeros(y.size)
+        j = 0
+        i = 0
+        while i < y.size:
+            while j < originalLabels.size:
+                if(y[i] == originalLabels[j]):
+                    newLabels[i] = self.labels[j]
+                j = j + 1
+            j = 0
+            i = i + 1
+        return newLabels
 
         """
-		Create an array with the label for each Predicted Y
+        Train scaler object of sklearn library with the y data train and using the method
+        of normalizing or stardandizing depend og the argument given by the user
 
 		Parameters
 		----------
 
-		prediction: array-like, shape (n_samples)
+		y_train : array-like, shape (n_samples)
 			Target vector relative to X
 
 		Returns
 		-------
 
-		predictionLabelized : array-like, shape (n_samples)
+		scaler :  scaler, sklearn preprocessing object
 			
 		"""
-        index = 0
-        predictionLabelized = []
-        for i in prediction:
-            predictionLabelized.append(self.labels[int(i)])
-        return predictionLabelized
 
     def scaleData (self, y_train):
-
+        y_train = y_train.reshape(-1,1)
         if(self.scaler == "Normalize"):
              scaler = sklearn.preprocessing.MinMaxScaler()
              scaler.fit(y_train)
@@ -206,7 +167,47 @@ class OrdinalWrapper(BaseEstimator,ClassifierMixin):
         scaler = sklearn.preprocessing.StandardScaler()
         scaler.fit(y_train)
         return scaler
+
+        """
+       Round the predictions to the closest value of y_test
+
+		Parameters
+		----------
+
+		y_ : array-like, shape (n_samples)
+			Target vector relative to X
+
+		Returns
+		-------
+
+		roundY :  sarray-like, shape (n_samples)
+			
+		"""
+    def roundToNearestClass (self, y):
+        roundY = np.zeros(y.size)
+        i = 0
+        j = 1
+        while i < y.size:
+            roundY[i] = self.labels_[0]
+            min = abs((self.labels_[0] - y[i]))
+            while j < self.labels_.size:
+                dif = abs( ( self.labels_[j] - y[i]))
+                if( dif < min):
+                    min = dif
+                    roundY[i] = self.labels_[j]
+                print(y[i])
+                print(roundY[i])
+                j = j + 1
+            j = 1
+            i = i + 1
         
+        print(roundY)
+        return roundY
+
+    
+
+        
+    
 
 
 

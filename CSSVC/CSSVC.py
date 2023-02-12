@@ -87,11 +87,10 @@ class CSSVC(BaseEstimator, ClassifierMixin):
 		preds = []
 		decs = []
 		X = check_array(X)
-		for i in range(0,len(self.models_)):	
-			print("prediction label", self.models_[i].label)
-
-			pred  = self.models_[i].classifier.predict(X) #se obtienen las predicciones
-			decv = self.models_[i].classifier.decision_function(X) #se obtienes los los valores de funcion de decision
+		for i in self.models_:	
+			print("prediction label", i.label)
+			pred  = i.classifier.predict(X) #se obtienen las predicciones
+			decv = i.classifier.decision_function(X) #se obtienes los los valores de funcion de decision
 			print("resultados",pred)
 			preds.append(pred)
 			print("valores de decision",decv)
@@ -106,14 +105,14 @@ class CSSVC(BaseEstimator, ClassifierMixin):
 	def ordinalWeights(self,p, targets): # funciona bien
 		w = np.array([],dtype = 'f')
 		wp = np.array([],dtype = 'f')
-		wDef = np.array([],dtype = 'f') 
+		wDef = np.array([],dtype = 'f')
+		sp = 0
+		noP = 0
 		##print('clase target: ', p)
 		#creamos los subconjunto con los elementos no pertencientes a la clase P y un subconjunto de 1 con tantos elementos como elementos pertencientes a la clase P en targets
-		for iter in range(0,len(targets)):
-			if(p != targets[iter]):
-				aux = targets[iter]
-				aux = abs(p-aux)
-				aux = aux + 1
+		for iter in targets:
+			if(p != iter):
+				aux = abs(p-iter) + 1
 				w = np.append(w,aux) #vector subconjunto con las elementos distintos al elemento P
 			else:
 				wp= np.append(wp,1.00) #subconjunto de 1 
@@ -127,17 +126,14 @@ class CSSVC(BaseEstimator, ClassifierMixin):
 		w = w/subSum   #dividimos el subconjunto por el sumatior de no p
 		#print('Division : ', w)
 		#juntamos los subconjuntos w y wp
-		sp = 0
-		noP = 0
-		for iter in range(0,len(targets)):
-			
-			if(p != targets[iter]):
-				wDef = np.append(wDef,w[noP])
-				noP = noP + 1
-			else:
-				wDef = np.append(wDef,wp[sp])
-				sp = sp + 1
-		#print(wDef)
+		for iter in targets:
+		 	if(p != iter):
+		 		wDef = np.append(wDef,w[noP])
+		 		noP = noP + 1
+		 	else:
+		 		wDef = np.append(wDef,wp[sp])
+		 		sp = sp + 1
+
 		return wDef
 	
 	def chooseWeight(self, preds, decs):
@@ -149,12 +145,7 @@ class CSSVC(BaseEstimator, ClassifierMixin):
         
 	def labelsBinarized(self,p ,targets):
 		w = np.array([],dtype = 'i')    		
-		for iter in range(0,len(targets)):
-			if(p != targets[iter]):
-				w = np.append(w,0) #vector subconjunto con las elementos distintos al elemento P
-			else:
-				w = np.append(w,1) #subconjunto de 1 
-        
+		w = np.where(targets == p,1,0)
 		return w
 		
        

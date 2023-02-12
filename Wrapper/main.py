@@ -24,13 +24,14 @@ def test_SVR(train_file, test_file):
 	params = "SVRParameters.json"
 	paramsJson = open(params)
 	parametersDictionary = json.load(paramsJson)
-	labels = np.array(["muy malo","malo","regular","bueno","excelente"])
+	labels = np.array([2.0,4.0,6.0,8.0,10.0])
 
-	clf = OrdinalWrapper(base_classifier="sklearn.svm.SVR",scaler = "standarize",labels=labels,params=parametersDictionary)
+	clf = OrdinalWrapper(base_classifier="sklearn.svm.SVR",scaler = "Normalize",labels=None,params=parametersDictionary)
 	
 	clf.fit(X_train,y_train)
 	prediction = clf.predict(X_test)
-	print(accuracy_score(y_test,prediction))
+	print(accuracy_score(clf.maskYValues(y_test),prediction))
+
 
 
 @click.command()
@@ -48,7 +49,7 @@ def test_randomForest(train_file, test_file):
 	params = "RandomForestParameter.json"
 	paramsJson = open(params)
 	parametersDictionary = json.load(paramsJson)
-	labels = np.array(["muy malo","malo","regular","bueno","excelente"])
+	labels = np.array([0.1,0.2,0.3,0.4,0.5,0.6])
 
 	clf = OrdinalWrapper(base_classifier="sklearn.ensemble.RandomForestRegressor",labels=labels,params=parametersDictionary)
 	clf.fit(X_train,y_train)
@@ -71,7 +72,7 @@ def test_ridgeRegression(train_file,test_file):
 	params = "RidgeParameter.json"
 	paramsJson = open(params)
 	parametersDictionary = json.load(paramsJson)
-	labels = np.array(["muy malo","malo","regular","bueno","excelente"])
+	labels = np.array([0.1,0.2,0.3,0.4,0.5,0.6])
 
 	clf = OrdinalWrapper(base_classifier="sklearn.linear_model.Ridge",labels=labels,params=parametersDictionary)
 	clf.fit(X_train,y_train)
