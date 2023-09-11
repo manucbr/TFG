@@ -1,0 +1,21 @@
+{
+    "general_conf": {
+		"basedir": "/home/manuel/Escritorio/datasetDefs/discretized",
+		"datasets": ["abalone", "bank1-5", "computer1-5", "housing10", "machine10", "pyrim10", "stock10"],
+        "input_preprocessing": "std",
+        "hyperparam_cv_nfolds": 5,
+        "jobs": 10,
+        "output_folder": "my_runs/",
+        "metrics": ["mae", "mze", "ccr"],
+        "cv_metric": "mze"
+    },
+    "configurations": {
+        "CSSVC": {
+            "classifier": "CSSVC",
+            "parameters": {
+                "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+                "gamma": [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+            }
+        }
+    }
+}

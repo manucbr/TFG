@@ -1,0 +1,42 @@
+{
+    "general_conf": {
+        "basedir": "./orca_python/datasets/",
+        "datasets": [
+            "car",
+            "balance-scale",
+            "winequality-red"
+        ],
+        "input_preprocessing": "std",
+        "hyperparam_cv_nfolds": 5,
+        "jobs": 100,
+        "output_folder": "my_runs/",
+        "metrics": ["mae", "mze"],
+        "cv_metric": "mae"
+    },
+    "configurations": {
+        "wrapper-SVR": {
+            "classifier": "orca_python.classifiers.RegressorWrapper",
+            "parameters": {
+                "base_regressor": "sklearn.svm.SVR",
+                "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+                "epsilon": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+                "gamma": [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+            }
+        },
+        "wrapper-RF": {
+            "classifier": "orca_python.classifiers.RegressorWrapper",
+            "parameters": {
+                "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+                "epsilon": [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+                "gamma": [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+            }
+        },
+        "wrapper-ridge": {
+            "classifier": "orca_python.classifiers.RegressorWrapper",
+            "parameters": {
+                "base_regressor": "sklearn.linear_model.Ridge",
+                "alpha": [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+            }
+        }
+    }
+}
