@@ -1,6 +1,0 @@
-separacion de logica del fitPredict en el fit y el Predict 
-tratamiento de la informacion del json fuera de la clase ordinalWrapper
-sustitucion de setParams por loadParams orca-python utilities
-normalizar/estandarizar la variable dependiente a criteria del usuario
-en el predict usar el inverse_transform y redondear a la clase mas cercana \
-
